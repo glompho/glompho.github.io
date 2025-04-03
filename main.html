@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bouldering Problems Tracker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Bouldering Problems Tracker</h1>
+
+    <div class="circuit-list" id="circuit-list" style="display: none;">
+        <h2>Your Circuits</h2>
+        <div id="circuits-container"></div>
+        <button class="btn" id="new-circuit-btn">Create New Circuit</button>
+        <button class="btn" id="export-circuits-btn">Export Circuits</button>
+        <input type="file" id="import-circuits-input" style="display: none;">
+        <button class="btn" id="import-circuits-btn">Import Circuits</button>
+    </div>
+
+    <div id="circuit-details" style="display: block;">
+        <h2 id="circuit-name-display"></h2>
+
+        <div class="color-key">
+            <div class="color-item" id="circuit-color-display">
+                <div class="color-box" id="circuit-color-box"></div>
+                <span id="circuit-color-label"></span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="filter-group">
+                <label>
+                    <input type="checkbox" id="show-unattempted" checked> Show Unattempted
+                </label>
+                <label>
+                    <input type="checkbox" id="show-flashed" checked> Show Flashed
+                </label>
+                <label>
+                    <input type="checkbox" id="show-sent" checked> Show Sent
+                </label>
+                <label>
+                    <input type="checkbox" id="show-project" checked> Show Project
+                </label>
+            </div>
+        </div>
+
+        <div class="stats" id="stats">
+            <div>Total problems: <span id="total-count">0</span></div>
+            <div>Flashed: <span id="flashed-count">0</span></div>
+            <div>Sent: <span id="sent-count">0</span></div>
+            <div>Project: <span id="project-count">0</span></div>
+            <button class="btn reset-btn" id="reset-progress">Reset Progress</button>
+            <button class="btn" id="back-to-circuits">Back to Circuits</button>
+        </div>
+
+        <div class="problem-grid" id="problem-grid"></div>
+    </div>
+
+    <!-- The note Modal -->
+    <div id="noteModal" class="note-modal">
+        <div class="note-modal-content">
+            <span class="note-close" id="noteClose">&times;</span>
+            <h2 id="noteModalTitle">Problem Note</h2>
+            <textarea id="noteInput" class="note-input"></textarea>
+            <button class="btn" id="saveNote">Save Note</button>
+        </div>
+    </div>
+
+     <!-- New Circuit Modal -->
+    <div id="new-circuit-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="close-modal">&times;</span>
+            <h2>Create New Circuit</h2>
+            <form id="new-circuit-form">
+                <div class="form-group">
+                    <label for="circuit-name">Circuit Name:</label>
+                    <input type="text" id="circuit-name" required placeholder="e.g. March 2025 Circuit">
+                </div>
+                <div class="form-group">
+                    <label for="problem-count">Number of Problems:</label>
+                    <input type="number" id="problem-count" min="1" max="100" value="30" required>
+                </div>
+                <div class="form-group">
+                    <label for="circuit-color">Circuit Color/Grade:</label>
+                    <select id="circuit-color">
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                </div>
+                <button type="submit" class="btn">Create Circuit</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="code.js"></script>
+</body>
+</html>
