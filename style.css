@@ -5,6 +5,18 @@ body {
     padding: 20px;
     background-color: #f5f5f5;
 }
+
+.problem.irnBru {
+    background: linear-gradient(to bottom right, #0099CC 50%, #FF6600 50%);
+}
+
+.problem.wasp {
+    background: linear-gradient(to bottom right, #FFD700 50%, #000000 50%);
+}
+
+.problem.murple {
+    background: linear-gradient(to bottom right, #4FFFB0 50%, #800080 50%);
+}
  
 h1,
 h2 {
@@ -256,7 +268,7 @@ h2 {
 .note-modal {
     display: none; /* Hidden by default */
     position: fixed; /* Stay in place */
-    z-index: 1; /* Sit on top */
+    z-index: 1001; /* Sit on top */
     left: 0;
     top: 0;
     width: 100%; /* Full width */
@@ -288,4 +300,75 @@ h2 {
     color: black;
     text-decoration: none;
     cursor: pointer;
+}
+
+#map-view {
+    position: relative;
+    width: 100%;
+}
+
+#map-container {
+    position: relative;
+    width: 100%;
+}
+
+#map-image {
+    width: 100%;
+    display: block; /* Remove any potential whitespace */
+}
+
+#problem-pins {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10; /* Ensure pins are above the image */
+}
+
+/* Update the problem-pins container style to allow clicks through */
+#problem-pins {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1002;
+    /* Only apply pointer-events to the pins themselves, not the container */
+    pointer-events: none;
+}
+
+.problem-pin {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: #fff;
+    border: 2px solid #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 12px;
+    cursor: pointer;
+    z-index: 1000;
+    transform: translate(-50%, -50%);
+    /* Re-enable pointer events just for the pins */
+    pointer-events: auto;
+}
+/* Status indicators */
+.problem-pin.unattempted {
+    background-color: #fff;
+}
+
+.problem-pin.flashed {
+    background-color: #ffcc00;
+}
+
+.problem-pin.sent {
+    background-color: #7cfc00;
+}
+
+.problem-pin.project {
+    background-color: #ff6b6b;
 }

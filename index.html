@@ -51,18 +51,39 @@
             <div>Sent: <span id="sent-count">0</span></div>
             <div>Project: <span id="project-count">0</span></div>
             <button class="btn reset-btn" id="reset-progress">Reset Progress</button>
+            <button class="btn" id="increase-problems">Increase Problems</button>
+            <button class="btn" id="decrease-problems">Decrease Problems</button>
             <button class="btn" id="back-to-circuits">Back to Circuits</button>
+            <button class="btn" id="toggle-view">Toggle View</button>
         </div>
 
         <div class="problem-grid" id="problem-grid"></div>
+
+        <div id="map-view" style="display: none;">
+            <div id="map-container">
+              <img id="map-image" src="map.png">
+              <div id="problem-pins"></div>
+            </div>
+            <button id="done-mapping" onclick="toggleView()">Done</button>
+          </div>
     </div>
+    
 
     <!-- The note Modal -->
     <div id="noteModal" class="note-modal">
         <div class="note-modal-content">
             <span class="note-close" id="noteClose">&times;</span>
             <h2 id="noteModalTitle">Problem Note</h2>
+            <label for="noteStatusSelect">Status:</label>
+            <select id="noteStatusSelect">
+                <option value="unattempted">Unattempted</option>
+                <option value="flashed">Flashed</option>
+                <option value="sent">Sent</option>
+                <option value="project">Project</option>
+            </select>
+            <label for="noteInput">Note:</label>
             <textarea id="noteInput" class="note-input"></textarea>
+            <button class="btn" id="setLocationBtn" style="display: none;">Set Location</button>
             <button class="btn" id="saveNote">Save Note</button>
         </div>
     </div>
