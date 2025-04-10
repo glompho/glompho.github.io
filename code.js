@@ -1,93 +1,358 @@
-// Grade colors and their corresponding display names
-const colorOptions = {
+/**
+ * Bouldering Problems Tracker
+ * A web application for tracking bouldering circuits and problems.
+ */
 
-    green: { color: "#32CD32", label: "Green" },
-    blue: { color: "#1E90FF", label: "Blue" },
-    purple: { color: "#A020F0", label: "Purple" },
-    red: { color: "#DC143C", label: "Red" },
-    yellow: { color: "#FFD700", label: "Yellow" },
-    irnBru: { 
-        colors: ["#0099CC", "#FF6600"], 
-        label: "IrnBru (Blue/Orange)",
-        type: "gradient"
-    },
-    wasp: {
-        colors: ["#FFD700", "#000000"],
-        label: "Wasp (Yellow/Black)",
-        type: "gradient"  
-    },
-    murple: {
-        colors: ["#4FFFB0", "#800080"],
-        label: "Murple (Mint/Purple)",
-        type: "gradient"
+// Wrap everything in an IIFE to avoid global scope pollution
+(function() {
+    'use strict';
+
+    //=============================================================================
+    // CONFIGURATION
+    //=============================================================================
+
+    /**
+     * Grade colors and their corresponding display names
+     * Each color can be a solid color or a gradient
+     */
+    const COLOR_OPTIONS = {
+        green: { color: "#32CD32", label: "Green" },
+        blue: { color: "#1E90FF", label: "Blue" },
+        purple: { color: "#A020F0", label: "Purple" },
+        red: { color: "#DC143C", label: "Red" },
+        yellow: { color: "#FFD700", label: "Yellow" },
+        irnBru: { 
+            colors: ["#0099CC", "#FF6600"], 
+            label: "IrnBru (Blue/Orange)",
+            type: "gradient"
+        },
+        wasp: {
+            colors: ["#FFD700", "#000000"],
+            label: "Wasp (Yellow/Black)",
+            type: "gradient"  
+        },
+        murple: {
+            colors: ["#4FFFB0", "#800080"],
+            label: "Murple (Mint/Purple)",
+            type: "gradient"
+        }
+    };
+
+    /**
+     * Problem status options
+     */
+    const PROBLEM_STATUSES = ['unattempted', 'flashed', 'sent', 'project'];
+
+    /**
+     * Month names for date formatting
+     */
+    const MONTHS = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    //=============================================================================
+    // STATE MANAGEMENT
+    //=============================================================================
+
+    // Application state
+    let state = {
+        circuits: [],
+        currentCircuitId: null,
+        selectedProblemId: null,
+        mapViewVisible: false
+    };
+
+    //=============================================================================
+    // DOM ELEMENTS
+    //=============================================================================
+
+    // Circuit modal elements
+    const elements = {
+        modal: document.getElementById('new-circuit-modal'),
+        newCircuitBtn: document.getElementById('new-circuit-btn'),
+        closeModalBtn: document.getElementById('close-modal'),
+        newCircuitForm: document.getElementById('new-circuit-form'),
+        circuitNameInput: document.getElementById('circuit-name'),
+        circuitColorSelect: document.getElementById('circuit-color'),
+        
+        // Circuit navigation
+        backToCircuitsBtn: document.getElementById('back-to-circuits'),
+        circuitDetailsSection: document.getElementById('circuit-details'),
+        circuitListSection: document.getElementById('circuit-list'),
+        
+        // Note modal
+        noteModal: document.getElementById("noteModal"),
+        noteCloseBtn: document.getElementById("noteClose"),
+        saveNoteBtn: document.getElementById("saveNote"),
+        noteInput: document.getElementById("noteInput"),
+        noteModalTitle: document.getElementById("noteModalTitle"),
+        noteStatusSelect: document.getElementById("noteStatusSelect"),
+        
+        // Map elements
+        mapImage: document.getElementById('map-image'),
+        problemPins: document.getElementById('problem-pins'),
+        
+        // Problem management
+        problemGrid: document.getElementById('problem-grid'),
+        mapView: document.getElementById('map-view'),
+        
+        // Stats elements
+        totalCount: document.getElementById('total-count'),
+        flashedCount: document.getElementById('flashed-count'),
+        sentCount: document.getElementById('sent-count'),
+        projectCount: document.getElementById('project-count'),
+        
+        // Filter checkboxes
+        showUnattempted: document.getElementById('show-unattempted'),
+        showFlashed: document.getElementById('show-flashed'),
+        showSent: document.getElementById('show-sent'),
+        showProject: document.getElementById('show-project'),
+        
+        // Buttons
+        resetProgress: document.getElementById('reset-progress'),
+        increaseProblems: document.getElementById('increase-problems'),
+        decreaseProblems: document.getElementById('decrease-problems'),
+        toggleView: document.getElementById('toggle-view'),
+        exportCircuits: document.getElementById('export-circuits-btn'),
+        importCircuits: document.getElementById('import-circuits-btn'),
+        importCircuitsInput: document.getElementById('import-circuits-input')
+    };
+
+    //=============================================================================
+    // UTILITY FUNCTIONS
+    //=============================================================================
+    
+    /**
+     * Get the current circuit based on currentCircuitId
+     * @returns {Object|null} The current circuit or null if not found
+     */
+    function getCurrentCircuit() {
+        return state.circuits.find(c => c.id === state.currentCircuitId);
     }
-};
-
-// Store all circuits
-let circuits = [];
-let currentCircuitId = null;
-
-// Modal elements
-const modal = document.getElementById('new-circuit-modal');
-const newCircuitBtn = document.getElementById('new-circuit-btn');
-const closeModalBtn = document.getElementById('close-modal');
-const newCircuitForm = document.getElementById('new-circuit-form');
-const circuitNameInput = document.getElementById('circuit-name');
-const circuitColorSelect = document.getElementById('circuit-color');
-
-// Circuit navigation
-const backToCircuitsBtn = document.getElementById('back-to-circuits');
-const circuitDetailsSection = document.getElementById('circuit-details');
-const circuitListSection = document.getElementById('circuit-list');
-
- // Get the note modal
-const noteModal = document.getElementById("noteModal");
-
-// Get the button that opens the note modal
-// const noteBtn = document.getElementById("noteBtn");
-
-// Get the <span> element that closes the note modal
-const noteCloseBtn = document.getElementById("noteClose");
-const saveNoteBtn = document.getElementById("saveNote");
-const noteInput = document.getElementById("noteInput");
-const noteModalTitle = document.getElementById("noteModalTitle");
-const noteStatusSelect = document.getElementById("noteStatusSelect");
-const mapLocationInput = document.getElementById("mapLocation");
-
-let selectedProblemId = null;
-let mapViewVisible = false;
-
-function selectProblemForLocation(problemId) {
-    selectedProblemId = problemId;
-    mapViewVisible = true;
-    const problemGrid = document.getElementById('problem-grid');
-    const mapView = document.getElementById('map-view');
-    problemGrid.style.display = 'none';
-    mapView.style.display = 'block';
-    renderProblems();
-    renderMap();
-}
-// Function to render the map with problem pins
-// Updated function to ensure pins appear on top of the map
-function renderMap() {
-    const circuit = circuits.find(c => c.id === currentCircuitId);
-    if (!circuit) return;
     
-    const mapImage = document.getElementById('map-image');
-    mapImage.style.cursor = selectedProblemId ? 'crosshair' : 'default';
+    /**
+     * Generate a unique ID
+     * @returns {string} A unique identifier
+     */
+    function generateId() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
     
-    const problemPins = document.getElementById('problem-pins');
-    problemPins.innerHTML = '';
+    /**
+     * Generate default circuit name based on date and color
+     * @param {string} colorKey - The color key to use in the name
+     * @returns {string} A generated circuit name
+     */
+    function generateDefaultCircuitName(colorKey) {
+        const date = new Date();
+        const month = MONTHS[date.getMonth()];
+        const year = date.getFullYear();
+        const colorName = COLOR_OPTIONS[colorKey].label.split(' ')[0];
+        
+        return `${month} ${year} ${colorName} Circuit`;
+    }
+
+    //=============================================================================
+    // DATA MANAGEMENT
+    //=============================================================================
     
-    circuit.problems.forEach(problem => {
-        if (problem.mapLocation) {
-            console.log('problem.mapLocation:', problem.mapLocation);
+    /**
+     * Load circuits from localStorage
+     */
+    function loadCircuits() {
+        const savedCircuits = localStorage.getItem('boulderingCircuits');
+        if (savedCircuits) {
+            state.circuits = JSON.parse(savedCircuits);
+            // Ensure each circuit has a lastViewed property
+            state.circuits.forEach(circuit => {
+                if (circuit.lastViewed === undefined) {
+                    circuit.lastViewed = null;
+                }
+            });
+        }
+        
+        const lastCircuitId = localStorage.getItem('lastCircuitId');
+        
+        if (lastCircuitId && state.circuits.find(c => c.id === lastCircuitId)) {
+            state.currentCircuitId = lastCircuitId;
+            loadCircuitDetails();
+        } else {
+            state.currentCircuitId = null;
+            elements.circuitDetailsSection.style.display = 'none';
+            elements.circuitListSection.style.display = 'block';
+        }
+        
+        renderCircuitsList();
+    }
+    
+    /**
+     * Save circuits to localStorage
+     */
+    function saveCircuits() {
+        localStorage.setItem('boulderingCircuits', JSON.stringify(state.circuits));
+    }
+    
+    /**
+     * Update the lastViewed timestamp for a circuit
+     * @param {string} circuitId - The ID of the circuit to update
+     */
+    function updateLastViewed(circuitId) {
+        const circuit = state.circuits.find(c => c.id === circuitId);
+        if (!circuit) return;
+        
+        circuit.lastViewed = Date.now();
+        saveCircuits();
+    }
+    
+    /**
+     * Create a new circuit
+     * @param {string} name - The name of the circuit
+     * @param {number} problemCount - The number of problems in the circuit
+     * @param {string} colorKey - The color key for the circuit
+     */
+    function createNewCircuit(name, problemCount, colorKey) {
+        const id = generateId();
+        const problems = generateProblems(problemCount, colorKey);
+        
+        const newCircuit = {
+            id,
+            name,
+            colorKey,
+            problems,
+            lastViewed: null
+        };
+        
+        state.circuits.push(newCircuit);
+        state.currentCircuitId = id;
+        saveCircuits();
+    }
+    
+    /**
+     * Generate problems based on count and color
+     * @param {number} count - The number of problems to generate
+     * @param {string} colorKey - The color key for the problems
+     * @returns {Array} An array of problem objects
+     */
+    function generateProblems(count, colorKey) {
+        let problems = [];
+        
+        // Create all problems with the same color
+        for (let i = 1; i <= count; i++) {
+            let problem = {
+                id: i,
+                status: 'unattempted', // Default status
+                note: '', // Add note property
+                mapLocation: null
+            };
+            
+            problems.push(problem);
+        }
+        
+        return problems;
+    }
+    
+    /**
+     * Add a note to a problem
+     * @param {string} circuitId - The ID of the circuit
+     * @param {number} problemId - The ID of the problem
+     * @param {string} note - The note text
+     */
+    function addNoteToProblem(circuitId, problemId, note) {
+        const circuit = state.circuits.find(c => c.id === circuitId);
+        if (!circuit) return;
+        
+        const problem = circuit.problems.find(p => p.id === problemId);
+        if (problem) {
+            problem.note = note;
+            saveCircuits();
+            renderProblems();
+        }
+    }
+    
+    /**
+     * Parse circuit data from exported text format
+     * @param {string} dataStr - The exported circuit data
+     * @returns {Array} An array of circuit objects
+     */
+    function parseCircuitData(dataStr) {
+        const circuits = [];
+        let currentCircuit = null;
+        let parseState = 'HEADER';
+        
+        dataStr.split('\n').forEach(line => {
+            if (line.startsWith('=== BOULDERING CIRCUITS v1 ===')) {
+                parseState = 'CIRCUIT';
+            } else if (line.startsWith('=== CIRCUIT ===')) {
+                parseState = 'CIRCUIT';
+                currentCircuit = { problems: [] };
+                circuits.push(currentCircuit);
+            } else if (line.startsWith('=== PROBLEMS ===')) {
+                parseState = 'PROBLEMS';
+            } else if (parseState === 'CIRCUIT') {
+                const [key, ...vals] = line.split(': ');
+                const val = vals.join(': '); // Handle values with colons
+                if (key === 'ID') currentCircuit.id = val;
+                if (key === 'Name') currentCircuit.name = val;
+                if (key === 'Color') currentCircuit.colorKey = val;
+                if (key === 'LastViewed') {
+                    currentCircuit.lastViewed = val === 'Never' ? null : new Date(val).getTime();
+                }
+            } else if (parseState === 'PROBLEMS') {
+                const match = line.match(/(\d+): Status-(\w+) Note-(.*)/);
+                if (match) {
+                    currentCircuit.problems.push({
+                        id: parseInt(match[1]),
+                        status: match[2],
+                        note: match[3].trim() || '',
+                        mapLocation: null // Default to null for imported problems
+                    });
+                }
+            }
+        });
+        
+        return circuits;
+    }
+
+    //=============================================================================
+    // MAP FUNCTIONALITY
+    //=============================================================================
+
+    /**
+     * Select a problem for location placement on the map
+     * @param {number} problemId - The ID of the problem to place on the map
+     */
+    function selectProblemForLocation(problemId) {
+        state.selectedProblemId = problemId;
+        state.mapViewVisible = true;
+        
+        elements.problemGrid.style.display = 'none';
+        elements.mapView.style.display = 'block';
+        
+        renderProblems();
+        renderMap();
+    }
+
+    /**
+     * Render the map with problem pins
+     * Ensures pins appear on top of the map
+     */
+    function renderMap() {
+        const circuit = getCurrentCircuit();
+        if (!circuit) return;
+        
+        elements.mapImage.style.cursor = state.selectedProblemId ? 'crosshair' : 'default';
+        elements.problemPins.innerHTML = '';
+        
+        circuit.problems.forEach(problem => {
+            if (!problem.mapLocation) return;
+            
             const [x, y] = problem.mapLocation.split(',').map(Number);
             if (isNaN(x) || isNaN(y)) return;
             
             // Calculate position as percentage of natural image dimensions
-            const xPercent = (x / mapImage.naturalWidth) * 100;
-            const yPercent = (y / mapImage.naturalHeight) * 100;
+            const xPercent = (x / elements.mapImage.naturalWidth) * 100;
+            const yPercent = (y / elements.mapImage.naturalHeight) * 100;
             
             const pin = document.createElement('div');
             pin.className = 'problem-pin';
@@ -96,774 +361,689 @@ function renderMap() {
             pin.style.top = `${yPercent}%`;
             
             // Add status indicator to pin
-            if (problem.status) {
-                pin.classList.add(problem.status);
-            } else {
-                pin.classList.add('unattempted');
-            }
-            
+            pin.classList.add(problem.status || 'unattempted');
             pin.textContent = problem.id;
-            problemPins.appendChild(pin);
             
-            // Add click handler to pins if needed
+            elements.problemPins.appendChild(pin);
+            
+            // Add click handler to pins
             pin.addEventListener('click', (e) => {
-                // Option to open note modal when clicking on pins
                 e.stopPropagation();
                 openNoteModal(problem.id);
             });
+        });
+    }
+
+    /**
+     * Toggle between problem grid and map view
+     */
+    function toggleView() {
+        state.mapViewVisible = !state.mapViewVisible;
+        
+        if (state.mapViewVisible) {
+            elements.problemGrid.style.display = 'none';
+            elements.mapView.style.display = 'block';
+        } else {
+            elements.problemGrid.style.display = 'grid';
+            elements.mapView.style.display = 'none';
+            state.selectedProblemId = null; // Clear selectedProblemId when exiting map view
         }
-    });
-}
+        renderMap();
+    }
 
-
-const mapImage = document.getElementById('map-image');
-mapImage.addEventListener('click', (e) => {
-    if (selectedProblemId) {
-        // Stop event propagation
+    /**
+     * Handle map click to set problem location
+     * @param {Event} e - The click event
+     */
+    function handleMapClick(e) {
+        if (!state.selectedProblemId) return;
+        
         e.stopPropagation();
         
-        const rect = mapImage.getBoundingClientRect();
+        const rect = elements.mapImage.getBoundingClientRect();
         
         // Calculate position relative to the image's natural dimensions
-        const x = Math.round((e.clientX - rect.left) / rect.width * mapImage.naturalWidth);
-        const y = Math.round((e.clientY - rect.top) / rect.height * mapImage.naturalHeight);
+        const x = Math.round((e.clientX - rect.left) / rect.width * elements.mapImage.naturalWidth);
+        const y = Math.round((e.clientY - rect.top) / rect.height * elements.mapImage.naturalHeight);
         
         console.log('Click coordinates on image:', e.clientX - rect.left, e.clientY - rect.top);
         console.log('Normalized coordinates:', x, y);
         
-        const circuit = circuits.find(c => c.id === currentCircuitId);
+        const circuit = getCurrentCircuit();
         if (!circuit) return;
         
-        const problem = circuit.problems.find(p => p.id === selectedProblemId);
+        const problem = circuit.problems.find(p => p.id === state.selectedProblemId);
         if (problem) {
             problem.mapLocation = `${x},${y}`;
             saveCircuits();
             renderMap();
             
             // Optionally provide feedback
-            console.log(`Set location for problem #${selectedProblemId} at ${x},${y}`);
+            console.log(`Set location for problem #${state.selectedProblemId} at ${x},${y}`);
         }
     }
-});
 
-// Make sure problem pins don't interfere with map clicking
-document.getElementById('problem-pins').addEventListener('click', (e) => {
-    // Only stop propagation if clicking on an actual pin
-    if (e.target.classList.contains('problem-pin')) {
-        e.stopPropagation();
+    //=============================================================================
+    // NOTE MODAL FUNCTIONALITY
+    //=============================================================================
+
+    /**
+     * Open the note modal for a specific problem
+     * @param {number} problemId - The ID of the problem to open notes for
+     */
+    function openNoteModal(problemId) {
+        state.selectedProblemId = problemId;
+        const circuit = getCurrentCircuit();
+        if (!circuit) return;
+
+        const problem = circuit.problems.find(p => p.id === problemId);
+        if (!problem) return;
+
+        elements.noteModalTitle.textContent = `Note for Problem #${problemId}`;
+        elements.noteInput.value = problem.note || '';
+        elements.noteStatusSelect.value = problem.status;
+
+        const setLocationBtn = document.getElementById('setLocationBtn');
+        setLocationBtn.style.display = "block";
+        
+        // Remove any existing event listeners to prevent duplicates
+        const newSetLocationBtn = setLocationBtn.cloneNode(true);
+        setLocationBtn.parentNode.replaceChild(newSetLocationBtn, setLocationBtn);
+        
+        newSetLocationBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectProblemForLocation(problemId);
+            elements.noteModal.style.display = "none";
+        });
+
+        elements.noteModal.style.display = "block";
     }
-});
-
-// Function to toggle between problem grid and map view
-function toggleView() {
-    mapViewVisible = !mapViewVisible;
-    const problemGrid = document.getElementById('problem-grid');
-    const mapView = document.getElementById('map-view');
-
-    if (mapViewVisible) {
-        problemGrid.style.display = 'none';
-        mapView.style.display = 'block';
-    } else {
-        problemGrid.style.display = 'grid';
-        mapView.style.display = 'none';
-        selectedProblemId = null; // Clear selectedProblemId when exiting map view
-    }
-    renderMap();
-}
-
-// Close note modal function
-noteCloseBtn.onclick = function() {
-    noteModal.style.display = "none";
-}
-
-// Save note function
-saveNoteBtn.onclick = function() {
-    if (selectedProblemId) {
-        const newStatus = noteStatusSelect.value;
-        const circuit = circuits.find(c => c.id === currentCircuitId);
+    
+    /**
+     * Save the note and status for the selected problem
+     */
+    function saveNote() {
+        if (!state.selectedProblemId) return;
+        
+        const newStatus = elements.noteStatusSelect.value;
+        const circuit = getCurrentCircuit();
+        
         if (circuit) {
-            const problem = circuit.problems.find(p => p.id === selectedProblemId);
+            const problem = circuit.problems.find(p => p.id === state.selectedProblemId);
             if (problem) {
                 problem.status = newStatus;
-            }
-        }
-        addNoteToProblem(currentCircuitId, selectedProblemId, noteInput.value);
-        renderProblems(); // re-render the problems
-        renderCircuitsList(); // Update the circuit list
-        renderMap();
-    }
-    selectedProblemId = null; // Clear selectedProblemId after saving
-    noteModal.style.display = "none";
-};
-
-function openNoteModal(problemId) {
-    selectedProblemId = problemId;
-    const circuit = circuits.find(c => c.id === currentCircuitId);
-    if (!circuit) return;
-
-    const problem = circuit.problems.find(p => p.id === problemId);
-    if (!problem) return;
-
-    noteModalTitle.textContent = `Note for Problem #${problemId}`;
-    noteInput.value = problem.note || '';
-    noteStatusSelect.value = problem.status;
-
-    const setLocationBtn = document.getElementById('setLocationBtn');
-    setLocationBtn.style.display = "block";
-    setLocationBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        selectProblemForLocation(problemId);
-        noteModal.style.display = "none";
-    });
-
-    noteModal.style.display = "block";
-}
-
-// Populate color dropdown from colorOptions
-function populateColorDropdown() {
-    circuitColorSelect.innerHTML = '';
-
-    Object.entries(colorOptions).forEach(([key, info]) => {
-        const option = document.createElement('option');
-        option.value = key;
-        option.textContent = info.label;
-        circuitColorSelect.appendChild(option);
-    });
-}
-
-// Load circuits from localStorage
-function loadCircuits() {
-    const savedCircuits = localStorage.getItem('boulderingCircuits');
-    if (savedCircuits) {
-        circuits = JSON.parse(savedCircuits);
-        // Ensure each circuit has a lastViewed property
-        circuits.forEach(circuit => {
-            if (circuit.lastViewed === undefined) {
-                circuit.lastViewed = null;
-            }
-        });
-    }
-
-   
-
-    const lastCircuitId = localStorage.getItem('lastCircuitId');
-
-    if (lastCircuitId && circuits.find(c => c.id === lastCircuitId)) {
-        currentCircuitId = lastCircuitId;
-        loadCircuitDetails();
-    } else {
-        currentCircuitId = null;
-        circuitDetailsSection.style.display = 'none';
-        circuitListSection.style.display = 'block';
-    }
-
-    renderCircuitsList();
-}
-
-// Save circuits to localStorage
-function saveCircuits() {
-    localStorage.setItem('boulderingCircuits', JSON.stringify(circuits));
-}
-
-// Render the list of circuits
-function renderCircuitsList() {
-    const container = document.getElementById('circuits-container');
-    container.innerHTML = '';
-
-    // Sort circuits by lastViewed (most recent first)
-    circuits.sort((a, b) => {
-        if (a.lastViewed === null && b.lastViewed === null) return 0;
-        if (a.lastViewed === null) return 1;
-        if (b.lastViewed === null) return -1;
-        return b.lastViewed - a.lastViewed;
-    });
-
-    circuits.forEach(circuit => {
-        const item = document.createElement('div');
-        item.className = `circuit-item ${circuit.id === currentCircuitId ? 'active' : ''}`;
-
-        const sentCount = circuit.problems.filter(p => p.status === 'sent').length;
-        const flashedCount = circuit.problems.filter(p => p.status === 'flashed').length;
-        const totalSent = sentCount + flashedCount;
-        const percentage = Math.round((totalSent / circuit.problems.length) * 100);
-        const colorInfo = colorOptions[circuit.colorKey];
-        const projectCount = circuit.problems.filter(p => p.status === 'project').length;
-
-        let colorIndicatorStyle = '';
-        if (colorInfo.type === 'gradient') {
-            colorIndicatorStyle = `background: linear-gradient(to bottom right, ${colorInfo.colors[0]} 50%, ${colorInfo.colors[1]} 50%);`;
-        } else {
-            colorIndicatorStyle = `background-color: ${colorInfo.color};`;
-
-        }
-
-        item.innerHTML = `
-            <div class="circuit-info">
-                <span class="circuit-color-indicator" style="${colorIndicatorStyle}"></span>
-                <strong>${circuit.name}</strong> (${totalSent}/${circuit.problems.length} - ${percentage}%)
-                <br>Project: <span id="project-count-list">${projectCount}</span>
-                <br>Last Viewed: ${circuit.lastViewed ? new Date(circuit.lastViewed).toLocaleDateString() + ' ' + new Date(circuit.lastViewed).toLocaleTimeString() : 'Never'}
-            </div>
-            <div class="circuit-actions">
-                <button class="select-btn" data-id="${circuit.id}">View</button>
-                <button class="delete-btn" data-id="${circuit.id}">Delete</button>
-            </div>
-        `;
-
-        container.appendChild(item);
-    });
-
-    // Add event listeners
-    document.querySelectorAll('.select-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            currentCircuitId = btn.dataset.id;
-            localStorage.setItem('lastCircuitId', currentCircuitId);
-            saveCircuits();
-            loadCircuitDetails();
-            renderCircuitsList();
-        });
-    });
-
-
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const id = btn.dataset.id;
-            if (circuits.length <= 1) {
-                alert('You must have at least one circuit.');
-                return;
-            }
-
-            if (confirm('Are you sure you want to delete this circuit?')) {
-                circuits = circuits.filter(c => c.id !== id);
-
-                // If we're deleting the current circuit, switch to the first one
-                if (id === currentCircuitId) {
-                    currentCircuitId = circuits[0].id;
-                }
-
+                problem.note = elements.noteInput.value;
                 saveCircuits();
+                renderProblems();
                 renderCircuitsList();
+                renderMap();
             }
+        }
+        
+        state.selectedProblemId = null; // Clear selectedProblemId after saving
+        elements.noteModal.style.display = "none";
+    }
+    
+    //=============================================================================
+    // UI RENDERING
+    //=============================================================================
+    
+    /**
+     * Populate color dropdown from COLOR_OPTIONS
+     */
+    function populateColorDropdown() {
+        elements.circuitColorSelect.innerHTML = '';
+        
+        Object.entries(COLOR_OPTIONS).forEach(([key, info]) => {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = info.label;
+            elements.circuitColorSelect.appendChild(option);
         });
-    });
-}
-
-function increaseProblemCount() {
-    const circuit = circuits.find(c => c.id === currentCircuitId);
-    if (!circuit) return;
-
-    const newProblemId = circuit.problems.length + 1;
+    }
+    
+    /**
+     * Render the list of circuits
+     */
+    function renderCircuitsList() {
+        const container = document.getElementById('circuits-container');
+        container.innerHTML = '';
+        
+        // Sort circuits by lastViewed (most recent first)
+        state.circuits.sort((a, b) => {
+            if (a.lastViewed === null && b.lastViewed === null) return 0;
+            if (a.lastViewed === null) return 1;
+            if (b.lastViewed === null) return -1;
+            return b.lastViewed - a.lastViewed;
+        });
+        
+        state.circuits.forEach(circuit => {
+            const item = document.createElement('div');
+            item.className = `circuit-item ${circuit.id === state.currentCircuitId ? 'active' : ''}`;
+            
+            const sentCount = circuit.problems.filter(p => p.status === 'sent').length;
+            const flashedCount = circuit.problems.filter(p => p.status === 'flashed').length;
+            const totalSent = sentCount + flashedCount;
+            const percentage = Math.round((totalSent / circuit.problems.length) * 100);
+            const colorInfo = COLOR_OPTIONS[circuit.colorKey];
+            const projectCount = circuit.problems.filter(p => p.status === 'project').length;
+            
+            let colorIndicatorStyle = '';
+            if (colorInfo.type === 'gradient') {
+                colorIndicatorStyle = `background: linear-gradient(to bottom right, ${colorInfo.colors[0]} 50%, ${colorInfo.colors[1]} 50%);`;
+            } else {
+                colorIndicatorStyle = `background-color: ${colorInfo.color};`;
+            }
+            
+            item.innerHTML = `
+                <div class="circuit-info">
+                    <span class="circuit-color-indicator" style="${colorIndicatorStyle}"></span>
+                    <strong>${circuit.name}</strong> (${totalSent}/${circuit.problems.length} - ${percentage}%)
+                    <br>Project: <span id="project-count-list">${projectCount}</span>
+                    <br>Last Viewed: ${circuit.lastViewed ? new Date(circuit.lastViewed).toLocaleDateString() + ' ' + new Date(circuit.lastViewed).toLocaleTimeString() : 'Never'}
+                </div>
+                <div class="circuit-actions">
+                    <button class="select-btn" data-id="${circuit.id}">View</button>
+                    <button class="delete-btn" data-id="${circuit.id}">Delete</button>
+                </div>
+            `;
+            
+            container.appendChild(item);
+        });
+        
+        // Add event listeners
+        document.querySelectorAll('.select-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                state.currentCircuitId = btn.dataset.id;
+                localStorage.setItem('lastCircuitId', state.currentCircuitId);
+                saveCircuits();
+                loadCircuitDetails();
+                renderCircuitsList();
+            });
+        });
+        
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.dataset.id;
+                if (state.circuits.length <= 1) {
+                    alert('You must have at least one circuit.');
+                    return;
+                }
+                
+                if (confirm('Are you sure you want to delete this circuit?')) {
+                    state.circuits = state.circuits.filter(c => c.id !== id);
+                    
+                    // If we're deleting the current circuit, switch to the first one
+                    if (id === state.currentCircuitId) {
+                        state.currentCircuitId = state.circuits[0].id;
+                    }
+                    
+                    saveCircuits();
+                    renderCircuitsList();
+                }
+            });
+        });
+    }
+    
+    /**
+     * Load current circuit details
+     */
+    function loadCircuitDetails() {
+        const circuit = getCurrentCircuit();
+        if (!circuit) return;
+        
+        updateLastViewed(circuit.id);
+        console.log(`Circuit ${circuit.name} lastViewed: ${circuit.lastViewed}`);
+        
+        document.getElementById('circuit-name-display').textContent = circuit.name;
+        
+        // Set the color display
+        const colorInfo = COLOR_OPTIONS[circuit.colorKey];
+        const colorBox = document.getElementById('circuit-color-box');
+        const colorLabel = document.getElementById('circuit-color-label');
+        
+        if (colorInfo.type === 'gradient') {
+            colorBox.style.background = `linear-gradient(to bottom right, ${colorInfo.colors[0]} 50%, ${colorInfo.colors[1]} 50%)`;
+        } else {
+            colorBox.style.backgroundColor = colorInfo.color;
+        }
+        colorLabel.textContent = colorInfo.label;
+        
+        // Show circuit details and hide circuit list
+        elements.circuitListSection.style.display = 'none';
+        elements.circuitDetailsSection.style.display = 'block';
+        
+        localStorage.setItem('lastCircuitId', state.currentCircuitId);
+        renderProblems();
+        renderMap();
+        
+        // Remove existing event listeners to prevent duplicates
+        const increaseButton = elements.increaseProblems;
+        const decreaseButton = elements.decreaseProblems;
+        const toggleViewButton = elements.toggleView;
+        
+        const newIncreaseButton = increaseButton.cloneNode(true);
+        const newDecreaseButton = decreaseButton.cloneNode(true);
+        const newToggleViewButton = toggleViewButton.cloneNode(true);
+        
+        increaseButton.parentNode.replaceChild(newIncreaseButton, increaseButton);
+        decreaseButton.parentNode.replaceChild(newDecreaseButton, decreaseButton);
+        toggleViewButton.parentNode.replaceChild(newToggleViewButton, toggleViewButton);
+        
+        // Update references in elements object
+        elements.increaseProblems = newIncreaseButton;
+        elements.decreaseProblems = newDecreaseButton;
+        elements.toggleView = newToggleViewButton;
+        
+        // Add new event listeners
+        elements.increaseProblems.addEventListener('click', increaseProblemCount);
+        elements.decreaseProblems.addEventListener('click', decreaseProblemCount);
+        elements.toggleView.addEventListener('click', toggleView);
+    }
+    
+    /**
+     * Render the problems grid for current circuit
+     */
+    function renderProblems() {
+        const circuit = getCurrentCircuit();
+        if (!circuit) return;
+        
+        updateLastViewed(circuit.id);
+        
+        elements.problemGrid.innerHTML = '';
+        
+        const showUnattempted = elements.showUnattempted.checked;
+        const showFlashed = elements.showFlashed.checked;
+        const showSent = elements.showSent.checked;
+        const showProject = elements.showProject.checked;
+        
+        let filteredProblems = [...circuit.problems];
+        const colorInfo = COLOR_OPTIONS[circuit.colorKey];
+        
+        // Apply completion filters
+        filteredProblems = filteredProblems.filter(p => {
+            if (p.status === 'unattempted' && showUnattempted) return true;
+            if (p.status === 'flashed' && showFlashed) return true;
+            if (p.status === 'sent' && showSent) return true;
+            if (p.status === 'project' && showProject) return true;
+            return false;
+        });
+        
+        // Sort by problem number
+        filteredProblems.sort((a, b) => a.id - b.id);
+        
+        // Create problem elements
+        filteredProblems.forEach(problem => {
+            const problemEl = document.createElement('div');
+            problemEl.className = `problem ${problem.status}`;
+            
+            if (colorInfo.type === 'gradient') {
+                problemEl.style.background = `linear-gradient(to bottom right, ${colorInfo.colors[0]} 50%, ${colorInfo.colors[1]} 50%)`;
+            } else {
+                problemEl.style.backgroundColor = colorInfo.color;
+            }
+            
+            // Adjust text color for better contrast
+            if (circuit.colorKey === 'yellow' || circuit.colorKey === 'white') {
+                problemEl.style.color = 'black';
+                problemEl.style.textShadow = 'none';
+            }
+            
+            const numberEl = document.createElement('span');
+            numberEl.className = 'problem-number';
+            numberEl.textContent = problem.id;
+            
+            problemEl.appendChild(numberEl);
+            
+            // Add note icon
+            const noteIcon = document.createElement('span');
+            noteIcon.className = 'note-icon' + (problem.note ? ' has-note' : '');
+            noteIcon.textContent = problem.note ? '✍️' : '📝';
+            noteIcon.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openNoteModal(problem.id);
+            });
+            problemEl.appendChild(noteIcon);
+            
+            let statusSymbol = '';
+            if (problem.status === 'flashed') statusSymbol = '⚡';
+            if (problem.status === 'sent') statusSymbol = '✓';
+            if (problem.status === 'project') statusSymbol = '🚧';
+            problemEl.appendChild(document.createTextNode(statusSymbol));
+            
+            let timer;
+            problemEl.addEventListener('touchstart', (e) => {
+                if ('ontouchstart' in window) {
+                    timer = setTimeout(() => {
+                        openNoteModal(problem.id);
+                    }, 500);
+                }
+            });
+            
+            problemEl.addEventListener('touchend', () => {
+                clearTimeout(timer);
+            });
+            
+            problemEl.addEventListener('click', () => {
+                if (state.selectedProblemId === null) {
+                    toggleProblem(problem.id);
+                }
+            });
+            
+            const noteEl = document.createElement('div');
+            noteEl.className = 'problem-note';
+            noteEl.textContent = problem.note || '';
+            problemEl.appendChild(noteEl);
+            
+            elements.problemGrid.appendChild(problemEl);
+        });
+        
+        updateStats();
+    }
+    
+    /**
+     * Update statistics display
+     */
+    function updateStats() {
+        const circuit = getCurrentCircuit();
+        if (!circuit) return;
+        
+        const totalCount = circuit.problems.length;
+        const flashedCount = circuit.problems.filter(p => p.status === 'flashed').length;
+        const totalSent = circuit.problems.filter(p => p.status === 'sent' || p.status === 'flashed').length;
+        const projectCount = circuit.problems.filter(p => p.status === 'project').length;
+        
+        elements.totalCount.textContent = totalCount;
+        elements.flashedCount.textContent = flashedCount;
+        elements.sentCount.textContent = totalSent;
+        elements.projectCount.textContent = projectCount;
+    }
+    
+    //=============================================================================
+    // PROBLEM MANAGEMENT
+    //=============================================================================
+    
+    /**
+     * Increase the problem count for the current circuit
+     */
+    function increaseProblemCount() {
+        const circuit = getCurrentCircuit();
+        if (!circuit) return;
+        
+        const newProblemId = circuit.problems.length + 1;
         circuit.problems.push({
             id: newProblemId,
-            status: 'unattempted'
+            status: 'unattempted',
+            note: '',
+            mapLocation: null
         });
+        
         saveCircuits();
         renderProblems();
         renderCircuitsList();
         loadCircuitDetails();
-}
-
-function decreaseProblemCount() {
-     const circuit = circuits.find(c => c.id === currentCircuitId);
-    if (!circuit) return;
-
-    if (circuit.problems.length <= 1) {
-        alert('Cannot reduce the number of problems to 0.');
-        return;
     }
-
-    if (circuit.problems.length <= 1) {
+    
+    /**
+     * Decrease the problem count for the current circuit
+     */
+    function decreaseProblemCount() {
+        const circuit = getCurrentCircuit();
+        if (!circuit) return;
+        
+        if (circuit.problems.length <= 1) {
             alert('Cannot reduce the number of problems to 0.');
             return;
         }
-
+        
         const problemIndex = circuit.problems.length - 1;
         const problem = circuit.problems[problemIndex];
+        
         if (problem && problem.status !== 'unattempted') {
             if (!confirm(`Are you sure you want to delete problem #${problem.id}? It is marked as ${problem.status}.`)) {
                 return;
             }
         }
-
+        
         circuit.problems.splice(problemIndex, 1);
-
+        
         // Re-number the problems
         if (circuit.problems.length > 0) {
             for (let i = 0; i < circuit.problems.length; i++) {
                 circuit.problems[i].id = i + 1;
             }
         }
-
+        
         saveCircuits();
         renderProblems();
         renderCircuitsList();
         loadCircuitDetails();
-}
-
-// Generate a unique ID
-function generateId() {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
-}
-
-// Create a new circuit
-function createNewCircuit(name, problemCount, colorKey) {
-    const id = generateId();
-    const problems = generateProblems(problemCount, colorKey);
-
-    const newCircuit = {
-        id,
-        name,
-        colorKey,
-        problems,
-        lastViewed: null
-    };
-
-    circuits.push(newCircuit);
-    currentCircuitId = id;
-    saveCircuits();
-}
-
-// Generate problems based on count and color
-function generateProblems(count, colorKey) {
-    let problems = [];
-    const colorInfo = colorOptions[colorKey];
-
-    // Create all problems with the same color
-    for (let i = 1; i <= count; i++) {
-        let problem = {
-            id: i,
-            status: 'unattempted', // Default status
-            note: '', // Add note property
-            mapLocation: null
-        };
-
-        problems.push(problem);
     }
-
-    return problems;
-}
-
-// Function to add notes to problems
-function addNoteToProblem(circuitId, problemId, note) {
-    const circuit = circuits.find(c => c.id === circuitId);
-    if (!circuit) return;
-
-    const problem = circuit.problems.find(p => p.id === problemId);
-    if (problem) {
-        problem.note = note;
-        saveCircuits();
-        renderProblems();
-    }
-}
-
-// Generate default circuit name based on date and color
-function generateDefaultCircuitName(colorKey) {
-    const date = new Date();
-    const months = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
-    ];
-
-    const month = months[date.getMonth()];
-    const year = date.getFullYear();
-    const colorName = colorOptions[colorKey].label.split(' ')[0];
-
-    return `${month} ${year} ${colorName} Circuit`;
-}
-
-// Load current circuit details
-function updateLastViewed(circuitId) {
-    const circuit = circuits.find(c => c.id === circuitId);
-    if (!circuit) return;
-
-    circuit.lastViewed = Date.now();
-    saveCircuits();
-}
-
-function loadCircuitDetails() {
-    const circuit = circuits.find(c => c.id === currentCircuitId);
-    if (!circuit) return;
-
-    updateLastViewed(circuit.id);
-    console.log(`Circuit ${circuit.name} lastViewed: ${circuit.lastViewed}`);
-    document.getElementById('circuit-name-display').textContent = circuit.name;
-
-    // Set the color display
-    const colorInfo = colorOptions[circuit.colorKey];
-    const colorBox = document.getElementById('circuit-color-box');
-    const colorLabel = document.getElementById('circuit-color-label');
-
-    if (colorInfo.type === 'gradient') {
-        colorBox.style.background = `linear-gradient(to bottom right, ${colorInfo.colors[0]} 50%, ${colorInfo.colors[1]} 50%)`;
-    } else {
-        colorBox.style.backgroundColor = colorInfo.color;
-    }
-    colorLabel.textContent = colorInfo.label;
-
-    // Show circuit details and hide circuit list
-    circuitListSection.style.display = 'none';
-    circuitDetailsSection.style.display = 'block';
-
-    localStorage.setItem('lastCircuitId', currentCircuitId);
-    renderProblems();
-    renderMap();
-
-    const increaseButton = document.getElementById('increase-problems');
-    const decreaseButton = document.getElementById('decrease-problems');
-    const toggleViewButton = document.getElementById('toggle-view');
-
-    increaseButton.removeEventListener('click', increaseProblemCount);
-    decreaseButton.removeEventListener('click', decreaseProblemCount);
-    toggleViewButton.removeEventListener('click', toggleView);
-
-    increaseButton.addEventListener('click', increaseProblemCount);
-    decreaseButton.addEventListener('click', decreaseProblemCount);
-    toggleViewButton.addEventListener('click', toggleView);
-}
-
-// Render the problems grid for current circuit
-function renderProblems() {
-    const circuit = circuits.find(c => c.id === currentCircuitId);
-    if (!circuit) return;
-
-    updateLastViewed(circuit.id);
-
-    const grid = document.getElementById('problem-grid');
-    grid.innerHTML = '';
-
-    const showUnattempted = document.getElementById('show-unattempted').checked;
-    const showFlashed = document.getElementById('show-flashed').checked;
-    const showSent = document.getElementById('show-sent').checked;
-    const showProject = document.getElementById('show-project').checked;
-
-    let filteredProblems = [...circuit.problems];
-    const colorInfo = colorOptions[circuit.colorKey];
-
-    // Apply completion filters
-    filteredProblems = filteredProblems.filter(p => {
-        if (p.status === 'unattempted' && showUnattempted) return true;
-        if (p.status === 'flashed' && showFlashed) return true;
-        if (p.status === 'sent' && showSent) return true;
-        if (p.status === 'project' && showProject) return true;
-        return false;
-    });
-
-    // Sort by problem number
-    filteredProblems.sort((a, b) => a.id - b.id);
-
-    // Create problem elements
-    filteredProblems.forEach(problem => {
-        const problemEl = document.createElement('div');
-        problemEl.className = `problem ${problem.status}`;
-
-        if (colorInfo.type === 'gradient') {
-            problemEl.style.background = `linear-gradient(to bottom right, ${colorInfo.colors[0]} 50%, ${colorInfo.colors[1]} 50%)`;
-        } else {
-            problemEl.style.backgroundColor = colorInfo.color;
-        }
-
-        // Adjust text color for better contrast
-        if (circuit.colorKey === 'yellow' || circuit.colorKey === 'white') {
-            problemEl.style.color = 'black';
-            problemEl.style.textShadow = 'none';
-        }
-
-        const numberEl = document.createElement('span');
-        numberEl.className = 'problem-number';
-        numberEl.textContent = problem.id;
-
-        problemEl.appendChild(numberEl);
-
-        // Add note icon
-        const noteIcon = document.createElement('span');
-        noteIcon.className = 'note-icon' + (problem.note ? ' has-note' : '');
-        noteIcon.textContent = problem.note ? '✍️' : '📝';
-        noteIcon.addEventListener('click', (e) => {
-            e.stopPropagation();
-            openNoteModal(problem.id);
-        });
-        problemEl.appendChild(noteIcon);
-
-        let statusSymbol = '';
-        if (problem.status === 'flashed') statusSymbol = '⚡';
-        if (problem.status === 'sent') statusSymbol = '✓';
-        if (problem.status === 'project') statusSymbol = '🚧';
-        problemEl.appendChild(document.createTextNode(statusSymbol));
-
-        let timer;
-        problemEl.addEventListener('touchstart', (e) => {
-            if ('ontouchstart' in window) {
-                timer = setTimeout(() => {
-                    openNoteModal(problem.id);
-                }, 500);
-            }
-        });
-
-        problemEl.addEventListener('touchend', () => {
-            clearTimeout(timer);
-        });
-
-        problemEl.addEventListener('click', () => {
-            if (selectedProblemId === null) {
-                toggleProblem(problem.id);
-            }
-        });
-
-        const noteEl = document.createElement('div');
-        noteEl.className = 'problem-note';
-        noteEl.textContent = problem.note || '';
-        problemEl.appendChild(noteEl);
-
-        grid.appendChild(problemEl);
-    });
-
-    updateStats();
-
-    function showNoteInput(problemId, target) {
-        const circuit = circuits.find(c => c.id === currentCircuitId);
+    
+    /**
+     * Toggle problem completion status
+     * @param {number} id - The ID of the problem to toggle
+     */
+    function toggleProblem(id) {
+        const circuit = getCurrentCircuit();
         if (!circuit) return;
-
-        const problem = circuit.problems.find(p => p.id === problemId);
-        if (!problem) return;
-
-        // Create input element
-        const inputEl = document.createElement('input');
-        inputEl.type = 'text';
-        inputEl.className = 'note-input';
-        inputEl.value = problem.note || '';
-
-        // Event listener for saving the note
-        inputEl.addEventListener('blur', () => {
-            addNoteToProblem(currentCircuitId, problemId, inputEl.value);
-            renderProblems(); // Re-render problems to display the note
-        });
-
-        // Replace the number with the input field
-        target.innerHTML = '';
-        target.appendChild(inputEl);
-        inputEl.focus();
+        
+        const problem = circuit.problems.find(p => p.id === id);
+        if (problem) {
+            const currentStatusIndex = PROBLEM_STATUSES.indexOf(problem.status);
+            problem.status = PROBLEM_STATUSES[(currentStatusIndex + 1) % PROBLEM_STATUSES.length];
+            saveCircuits();
+            renderProblems();
+            renderCircuitsList(); // Update the completion stats in the list
+        }
     }
-}
-
-// Toggle problem completion status
-function toggleProblem(id) {
-    const circuit = circuits.find(c => c.id === currentCircuitId);
-    if (!circuit) return;
-
-    const problem = circuit.problems.find(p => p.id === id);
-    if (problem) {
-        const statuses = ['unattempted', 'flashed', 'sent', 'project'];
-        const currentStatusIndex = statuses.indexOf(problem.status);
-        problem.status = statuses[(currentStatusIndex + 1) % statuses.length];
-        saveCircuits();
-        renderProblems();
-        renderCircuitsList(); // Update the completion stats in the list
+    
+    /**
+     * Reset progress for all problems in the current circuit
+     */
+    function resetProgress() {
+        const circuit = getCurrentCircuit();
+        if (!circuit) return;
+        
+        if (confirm('Are you sure you want to reset all progress for this circuit?')) {
+            circuit.problems.forEach(p => p.status = 'unattempted');
+            saveCircuits();
+            renderProblems();
+            renderCircuitsList();
+        }
     }
-}
-
-// Update statistics
-function updateStats() {
-    const circuit = circuits.find(c => c.id === currentCircuitId);
-    if (!circuit) return;
-
-    const totalCount = circuit.problems.length;
-    const flashedCount = circuit.problems.filter(p => p.status === 'flashed').length;
-    const totalSent = circuit.problems.filter(p => p.status === 'sent' || p.status === 'flashed').length;
-    const projectCount = circuit.problems.filter(p => p.status === 'project').length;
-
-    document.getElementById('total-count').textContent = totalCount;
-    document.getElementById('flashed-count').textContent = flashedCount;
-    document.getElementById('sent-count').textContent = totalSent;
-    document.getElementById('project-count').textContent = projectCount;
-}
-
-// Modal handling
-newCircuitBtn.onclick = function() {
-    // Generate default name based on the first color option
-    const defaultColorKey = Object.keys(colorOptions)[0];
-    circuitColorSelect.value = defaultColorKey;
-    circuitNameInput.value = generateDefaultCircuitName(defaultColorKey);
-
-    modal.style.display = 'block';
-}
-
-// Update the default name when color changes
-circuitColorSelect.onchange = function() {
-    circuitNameInput.value = generateDefaultCircuitName(this.value);
-}
-
-closeModalBtn.onclick = function() {
-    modal.style.display = 'none';
-}
-
-window.onclick = function(event) {
-    if (event.target === modal) {
-        modal.style.display = 'none';
-    }
-}
-
-// Form submission
-newCircuitForm.onsubmit = function(e) {
-    e.preventDefault();
-
-    const name = circuitNameInput.value;
-    const count = parseInt(document.getElementById('problem-count').value);
-    const colorKey = circuitColorSelect.value;
-
-    createNewCircuit(name, count, colorKey);
-    renderCircuitsList();
-    loadCircuitDetails();
-
-    // Close modal and reset form
-    modal.style.display = 'none';
-    newCircuitForm.reset();
-}
-
-// Reset progress
-document.getElementById('reset-progress').addEventListener('click', () => {
-    const circuit = circuits.find(c => c.id === currentCircuitId);
-    if (!circuit) return;
-
-    if (confirm('Are you sure you want to reset all progress for this circuit?')) {
-        circuit.problems.forEach(p => p.status = 'unattempted');
-        saveCircuits();
-        renderProblems();
-        renderCircuitsList();
-    }
-});
-
-// Back to circuits list
-backToCircuitsBtn.addEventListener('click', () => {
-    circuitDetailsSection.style.display = 'none';
-    circuitListSection.style.display = 'block';
-});
-
-function exportCircuits() {
-    const circuits = JSON.parse(localStorage.getItem('boulderingCircuits') || '[]');
-    if (!circuits.length) {
-        alert('No circuits to export.');
-        return;
-    }
-
-    let dataStr = "=== BOULDERING CIRCUITS v1 ===\n\n";
-
-    circuits.forEach(circuit => {
-        dataStr += "=== CIRCUIT ===\n";
-        dataStr += `ID: ${circuit.id}\n`;
-        dataStr += `Name: ${circuit.name}\n`;
-        dataStr += `Color: ${circuit.colorKey}\n`;
-        dataStr += `LastViewed: ${circuit.lastViewed ? new Date(circuit.lastViewed).toLocaleDateString() + ' ' + new Date(circuit.lastViewed).toLocaleTimeString() : 'Never'}\n`;
-        dataStr += "\n=== PROBLEMS ===\n";
-        circuit.problems.forEach(problem => {
-            dataStr += `${problem.id}: Status-${problem.status} Note-${problem.note || ''}\n`;
-        });
-        dataStr += "\n";
-    });
-
-    const dataUri = 'data:text/plain;charset=utf-8,' + encodeURIComponent(dataStr);
-
-    const exportFileName = 'circuits.txt';
-
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileName);
-    document.body.appendChild(linkElement);
-    linkElement.click();
-    document.body.removeChild(linkElement);
-}
-
-function importCircuits(event) {
-    const file = event.target.files[0];
-    if (!file) {
-        alert('No file selected.');
-        return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const dataStr = e.target.result;
-        try {
-            const parsedCircuits = parseCircuitData(dataStr);
-
-            // ID Preservation Logic
-            const existingCircuits = JSON.parse(localStorage.getItem('boulderingCircuits') || '[]');
-            const existingIds = new Set(existingCircuits.map(c => c.id));
-
-            parsedCircuits.forEach(c => {
-                if (!c.id || existingIds.has(c.id)) {
-                    c.id = generateId(); // Only generate new ID if conflict exists
-                }
-                existingIds.add(c.id); // Add the new id to the set
+    
+    //=============================================================================
+    // IMPORT/EXPORT FUNCTIONALITY
+    //=============================================================================
+    
+    /**
+     * Export circuits to a text file
+     */
+    function exportCircuits() {
+        const circuits = JSON.parse(localStorage.getItem('boulderingCircuits') || '[]');
+        if (!circuits.length) {
+            alert('No circuits to export.');
+            return;
+        }
+        
+        let dataStr = "=== BOULDERING CIRCUITS v1 ===\n\n";
+        
+        circuits.forEach(circuit => {
+            dataStr += "=== CIRCUIT ===\n";
+            dataStr += `ID: ${circuit.id}\n`;
+            dataStr += `Name: ${circuit.name}\n`;
+            dataStr += `Color: ${circuit.colorKey}\n`;
+            dataStr += `LastViewed: ${circuit.lastViewed ? new Date(circuit.lastViewed).toLocaleDateString() + ' ' + new Date(circuit.lastViewed).toLocaleTimeString() : 'Never'}\n`;
+            dataStr += "\n=== PROBLEMS ===\n";
+            circuit.problems.forEach(problem => {
+                dataStr += `${problem.id}: Status-${problem.status} Note-${problem.note || ''}\n`;
             });
-
-            localStorage.setItem('boulderingCircuits', JSON.stringify(parsedCircuits));
-            alert('Circuits imported successfully!');
-            loadCircuits(); // Reload the circuits
-        } catch (error) {
-            console.error('Error importing circuits:', error);
-            alert('Error importing circuits: Invalid file format.');
+            dataStr += "\n";
+        });
+        
+        const dataUri = 'data:text/plain;charset=utf-8,' + encodeURIComponent(dataStr);
+        const exportFileName = 'circuits.txt';
+        
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileName);
+        document.body.appendChild(linkElement);
+        linkElement.click();
+        document.body.removeChild(linkElement);
+    }
+    
+    /**
+     * Import circuits from a text file
+     * @param {Event} event - The file input change event
+     */
+    function importCircuits(event) {
+        const file = event.target.files[0];
+        if (!file) {
+            alert('No file selected.');
+            return;
         }
-    };
-    reader.readAsText(file);
-}
-
-function parseCircuitData(dataStr) {
-    const circuits = [];
-    let currentCircuit = null;
-    let state = 'HEADER';
-
-    dataStr.split('\n').forEach(line => {
-        if (line.startsWith('=== BOULDERING CIRCUITS v1 ===')) {
-            state = 'CIRCUIT';
-        } else if (line.startsWith('=== CIRCUIT ===')) {
-            state = 'CIRCUIT';
-            currentCircuit = { problems: [] };
-            circuits.push(currentCircuit);
-        } else if (line.startsWith('=== PROBLEMS ===')) {
-            state = 'PROBLEMS';
-        } else if (state === 'CIRCUIT') {
-            const [key, ...vals] = line.split(': ');
-            const val = vals.join(': '); // Handle values with colons
-            if (key === 'ID') currentCircuit.id = val;
-            if (key === 'Name') currentCircuit.name = val;
-            if (key === 'Color') currentCircuit.colorKey = val;
-             if (key === 'LastViewed') {
-                currentCircuit.lastViewed = val === 'Never' ? null : new Date(val).getTime();
-            }
-        } else if (state === 'PROBLEMS') {
-            const match = line.match(/(\d+): Status-(\w+) Note-(.*)/);
-            if (match) {
-                currentCircuit.problems.push({
-                    id: parseInt(match[1]),
-                    status: match[2],
-                    note: match[3].trim() || ''
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const dataStr = e.target.result;
+            try {
+                const parsedCircuits = parseCircuitData(dataStr);
+                
+                // ID Preservation Logic
+                const existingCircuits = JSON.parse(localStorage.getItem('boulderingCircuits') || '[]');
+                const existingIds = new Set(existingCircuits.map(c => c.id));
+                
+                parsedCircuits.forEach(c => {
+                    if (!c.id || existingIds.has(c.id)) {
+                        c.id = generateId(); // Only generate new ID if conflict exists
+                    }
+                    existingIds.add(c.id); // Add the new id to the set
                 });
+                
+                localStorage.setItem('boulderingCircuits', JSON.stringify(parsedCircuits));
+                alert('Circuits imported successfully!');
+                loadCircuits(); // Reload the circuits
+            } catch (error) {
+                console.error('Error importing circuits:', error);
+                alert('Error importing circuits: Invalid file format.');
             }
-        }
-    });
-
-    return circuits;
-}
-
-// Add event listener to the import button
-document.getElementById('import-circuits-btn').addEventListener('click', () => {
-    document.getElementById('import-circuits-input').addEventListener('change', importCircuits);
-    document.getElementById('import-circuits-input').click();
-});
-
-// Add event listener to the export button
-document.getElementById('export-circuits-btn').addEventListener('click', exportCircuits);
-
-// Set up event listeners for filters
-document.getElementById('show-unattempted').addEventListener('change', renderProblems);
-document.getElementById('show-flashed').addEventListener('change', renderProblems);
-document.getElementById('show-sent').addEventListener('change', renderProblems);
-document.getElementById('show-project').addEventListener('change', renderProblems);
-
-// Initialize the app
-document.addEventListener('DOMContentLoaded', () => {
-    // Populate the color dropdown
-    populateColorDropdown();
-    // Clear lastCircuitId from localStorage
-    loadCircuits();
-});
+        };
+        reader.readAsText(file);
+    }
+    
+    //=============================================================================
+    // EVENT LISTENERS
+    //=============================================================================
+    
+    // Initialize event listeners
+    function initEventListeners() {
+        // Map click handler
+        elements.mapImage.addEventListener('click', handleMapClick);
+        
+        // Make sure problem pins don't interfere with map clicking
+        elements.problemPins.addEventListener('click', (e) => {
+            // Only stop propagation if clicking on an actual pin
+            if (e.target.classList.contains('problem-pin')) {
+                e.stopPropagation();
+            }
+        });
+        
+        // Note modal handlers
+        elements.noteCloseBtn.onclick = function() {
+            elements.noteModal.style.display = "none";
+        };
+        
+        elements.saveNoteBtn.onclick = saveNote;
+        
+        // Circuit modal handlers
+        elements.newCircuitBtn.onclick = function() {
+            // Generate default name based on the first color option
+            const defaultColorKey = Object.keys(COLOR_OPTIONS)[0];
+            elements.circuitColorSelect.value = defaultColorKey;
+            elements.circuitNameInput.value = generateDefaultCircuitName(defaultColorKey);
+            
+            elements.modal.style.display = 'block';
+        };
+        
+        // Update the default name when color changes
+        elements.circuitColorSelect.onchange = function() {
+            elements.circuitNameInput.value = generateDefaultCircuitName(this.value);
+        };
+        
+        elements.closeModalBtn.onclick = function() {
+            elements.modal.style.display = 'none';
+        };
+        
+        window.onclick = function(event) {
+            if (event.target === elements.modal) {
+                elements.modal.style.display = 'none';
+            }
+        };
+        
+        // Form submission
+        elements.newCircuitForm.onsubmit = function(e) {
+            e.preventDefault();
+            
+            const name = elements.circuitNameInput.value;
+            const count = parseInt(document.getElementById('problem-count').value);
+            const colorKey = elements.circuitColorSelect.value;
+            
+            createNewCircuit(name, count, colorKey);
+            renderCircuitsList();
+            loadCircuitDetails();
+            
+            // Close modal and reset form
+            elements.modal.style.display = 'none';
+            elements.newCircuitForm.reset();
+        };
+        
+        // Reset progress
+        elements.resetProgress.addEventListener('click', resetProgress);
+        
+        // Back to circuits list
+        elements.backToCircuitsBtn.addEventListener('click', () => {
+            elements.circuitDetailsSection.style.display = 'none';
+            elements.circuitListSection.style.display = 'block';
+        });
+        
+        // Import/Export
+        elements.exportCircuits.addEventListener('click', exportCircuits);
+        
+        elements.importCircuits.addEventListener('click', () => {
+            // Remove any existing event listeners to prevent duplicates
+            const newInput = elements.importCircuitsInput.cloneNode(true);
+            elements.importCircuitsInput.parentNode.replaceChild(newInput, elements.importCircuitsInput);
+            elements.importCircuitsInput = newInput;
+            
+            elements.importCircuitsInput.addEventListener('change', importCircuits);
+            elements.importCircuitsInput.click();
+        });
+        
+        // Filter checkboxes
+        elements.showUnattempted.addEventListener('change', renderProblems);
+        elements.showFlashed.addEventListener('change', renderProblems);
+        elements.showSent.addEventListener('change', renderProblems);
+        elements.showProject.addEventListener('change', renderProblems);
+    }
+    
+    //=============================================================================
+    // INITIALIZATION
+    //=============================================================================
+    
+    // Initialize the app
+    function init() {
+        // Populate the color dropdown
+        populateColorDropdown();
+        
+        // Set up event listeners
+        initEventListeners();
+        
+        // Load circuits from localStorage
+        loadCircuits();
+    }
+    
+    // Run initialization when DOM is loaded
+    document.addEventListener('DOMContentLoaded', init);
+    
+})(); // Close the IIFE
