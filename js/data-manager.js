@@ -14,25 +14,43 @@
      * Load circuits from localStorage
      */
     function loadCircuits() {
+        console.log("Loading circuits from localStorage");
         const savedCircuits = localStorage.getItem('boulderingCircuits');
+        console.log("Saved circuits from localStorage:", savedCircuits);
+        
         if (savedCircuits) {
-            const circuits = JSON.parse(savedCircuits);
-            // Ensure each circuit has a lastViewed property
-            circuits.forEach(circuit => {
-                if (circuit.lastViewed === undefined) {
-                    circuit.lastViewed = null;
-                }
-            });
-            state.setCircuits(circuits);
+            try {
+                const circuits = JSON.parse(savedCircuits);
+                console.log("Parsed circuits:", circuits);
+                
+                // Ensure each circuit has a lastViewed property
+                circuits.forEach(circuit => {
+                    if (circuit.lastViewed === undefined) {
+                        circuit.lastViewed = null;
+                    }
+                });
+                
+                state.setCircuits(circuits);
+                console.log("Circuits set in state:", state.getState().circuits);
+            } catch (error) {
+                console.error("Error parsing circuits from localStorage:", error);
+                state.setCircuits([]);
+            }
+        } else {
+            console.log("No circuits found in localStorage, setting empty array");
+            state.setCircuits([]);
         }
         
         const lastCircuitId = localStorage.getItem('lastCircuitId');
+        console.log("Last circuit ID from localStorage:", lastCircuitId);
         
         if (lastCircuitId && state.getState().circuits.find(c => c.id === lastCircuitId)) {
             state.setCurrentCircuitId(lastCircuitId);
+            console.log("Current circuit ID set to:", lastCircuitId);
             return true; // Circuit found and set
         } else {
             state.setCurrentCircuitId(null);
+            console.log("Current circuit ID set to null");
             return false; // No circuit found
         }
     }
@@ -41,9 +59,17 @@
      * Save circuits to localStorage
      */
     function saveCircuits() {
-        localStorage.setItem('boulderingCircuits', JSON.stringify(state.getState().circuits));
-        if (state.getState().currentCircuitId) {
-            localStorage.setItem('lastCircuitId', state.getState().currentCircuitId);
+        console.log("Saving circuits to localStorage");
+        const circuits = state.getState().circuits;
+        console.log("Circuits to save:", circuits);
+        
+        localStorage.setItem('boulderingCircuits', JSON.stringify(circuits));
+        console.log("Saved circuits to localStorage");
+        
+        const currentCircuitId = state.getState().currentCircuitId;
+        if (currentCircuitId) {
+            localStorage.setItem('lastCircuitId', currentCircuitId);
+            console.log("Saved lastCircuitId to localStorage:", currentCircuitId);
         }
     }
     
@@ -66,25 +92,34 @@
      * @param {string} name - The name of the circuit
      * @param {number} problemCount - The number of problems in the circuit
      * @param {string} colorKey - The color key for the circuit
-     * @returns {string} The ID of the new circuit
+     * @returns {object} The new circuit object
      */
     function createNewCircuit(name, problemCount, colorKey) {
+        console.log("Creating new circuit with name:", name, "problemCount:", problemCount, "colorKey:", colorKey);
+        
         const id = utils.generateId();
+        console.log("Generated ID:", id);
+        
         const problems = generateProblems(problemCount, colorKey);
+        console.log("Generated problems:", problems);
         
         const newCircuit = {
             id,
             name,
             colorKey,
             problems,
-            lastViewed: null
+            lastViewed: Date.now() // Set lastViewed to current time
         };
+        console.log("New circuit object:", newCircuit);
         
         const circuits = [...state.getState().circuits, newCircuit];
+        console.log("Updated circuits array:", circuits);
+        
         state.setCircuits(circuits);
         state.setCurrentCircuitId(id);
         saveCircuits();
-        return id;
+        
+        return newCircuit; // Return the entire circuit object
     }
     
     /**
@@ -202,6 +237,148 @@
         return dataStr;
     }
 
+    /**
+     * Get a circuit by ID
+     * @param {string} circuitId - The ID of the circuit to get
+     * @returns {object|null} The circuit object or null if not found
+     */
+    function getCircuitById(circuitId) {
+        console.log("Getting circuit by ID:", circuitId);
+        const circuits = state.getState().circuits;
+        console.log("Available circuits:", circuits);
+        
+        const circuit = circuits.find(c => c.id === circuitId);
+        console.log("Found circuit:", circuit);
+        
+        return circuit || null;
+    }
+    
+    /**
+     * Get a problem by ID
+     * @param {string} circuitId - The ID of the circuit
+     * @param {string} problemId - The ID of the problem
+     * @returns {object|null} The problem object or null if not found
+     */
+    function getProblemById(circuitId, problemId) {
+        const circuit = getCircuitById(circuitId);
+        if (!circuit) return null;
+        
+        return circuit.problems.find(p => p.id == problemId) || null;
+    }
+    
+    /**
+     * Get all problems for a circuit
+     * @param {string} circuitId - The ID of the circuit
+     * @returns {Array} An array of problem objects
+     */
+    function getProblemsForCircuit(circuitId) {
+        const circuit = getCircuitById(circuitId);
+        return circuit ? circuit.problems : [];
+    }
+    
+    /**
+     * Update a problem's location
+     * @param {string} circuitId - The ID of the circuit
+     * @param {string} problemId - The ID of the problem
+     * @param {object} location - The location object with x and y properties
+     */
+    function updateProblemLocation(circuitId, problemId, location) {
+        const circuits = state.getState().circuits;
+        const circuit = circuits.find(c => c.id === circuitId);
+        if (!circuit) return;
+        
+        const problem = circuit.problems.find(p => p.id == problemId);
+        if (problem) {
+            problem.location = location;
+            state.setCircuits(circuits);
+            saveCircuits();
+        }
+    }
+    
+    /**
+     * Get all circuits
+     * @returns {Array} An array of all circuit objects
+     */
+    function getAllCircuits() {
+        return state.getState().circuits;
+    }
+    
+    /**
+     * Update a problem's status and note
+     * @param {string} circuitId - The ID of the circuit
+     * @param {string} problemId - The ID of the problem
+     * @param {object} details - Object with status and note properties
+     */
+    function updateProblemDetails(circuitId, problemId, details) {
+        const circuits = state.getState().circuits;
+        const circuit = circuits.find(c => c.id === circuitId);
+        if (!circuit) return;
+        
+        const problem = circuit.problems.find(p => p.id == problemId);
+        if (problem) {
+            if (details.status) problem.status = details.status;
+            if (details.note !== undefined) problem.note = details.note;
+            if (details.location) problem.location = details.location;
+            
+            state.setCircuits(circuits);
+            saveCircuits();
+        }
+    }
+    
+    /**
+     * Reset progress for all problems in a circuit
+     * @param {string} circuitId - The ID of the circuit
+     */
+    function resetCircuitProgress(circuitId) {
+        const circuits = state.getState().circuits;
+        const circuit = circuits.find(c => c.id === circuitId);
+        if (!circuit) return;
+        
+        circuit.problems.forEach(problem => {
+            problem.status = 'unattempted';
+            problem.note = '';
+        });
+        
+        state.setCircuits(circuits);
+        saveCircuits();
+    }
+    
+    /**
+     * Increase the number of problems in a circuit
+     * @param {string} circuitId - The ID of the circuit
+     */
+    function increaseProblemCount(circuitId) {
+        const circuits = state.getState().circuits;
+        const circuit = circuits.find(c => c.id === circuitId);
+        if (!circuit) return;
+        
+        const currentCount = circuit.problems.length;
+        const newProblem = {
+            id: currentCount + 1,
+            status: 'unattempted',
+            note: '',
+            location: null
+        };
+        
+        circuit.problems.push(newProblem);
+        state.setCircuits(circuits);
+        saveCircuits();
+    }
+    
+    /**
+     * Decrease the number of problems in a circuit
+     * @param {string} circuitId - The ID of the circuit
+     */
+    function decreaseProblemCount(circuitId) {
+        const circuits = state.getState().circuits;
+        const circuit = circuits.find(c => c.id === circuitId);
+        if (!circuit || circuit.problems.length <= 1) return;
+        
+        circuit.problems.pop();
+        state.setCircuits(circuits);
+        saveCircuits();
+    }
+
     // Expose data management functions to other modules
     window.BoulderingApp = window.BoulderingApp || {};
     window.BoulderingApp.dataManager = {
@@ -212,6 +389,15 @@
         generateProblems,
         addNoteToProblem,
         parseCircuitData,
-        exportCircuitsToText
+        exportCircuitsToText,
+        getCircuitById,
+        getProblemById,
+        getProblemsForCircuit,
+        updateProblemLocation,
+        getAllCircuits,
+        updateProblemDetails,
+        resetCircuitProgress,
+        increaseProblemCount,
+        decreaseProblemCount
     };
 })();

@@ -356,19 +356,33 @@ h2 {
     /* Re-enable pointer events just for the pins */
     pointer-events: auto;
 }
-/* Status indicators */
-.problem-pin.unattempted {
-    background-color: #fff;
+
+/* Global Map View Specific Styles */
+#global-map-view {
+    position: relative; /* Needed for absolute positioning of children */
+    width: 100%;
+    margin-top: 20px; /* Add some space */
 }
 
-.problem-pin.flashed {
-    background-color: #ffcc00;
+#global-map-container {
+    position: relative; /* Also needed */
+    width: 100%;
 }
 
-.problem-pin.sent {
-    background-color: #7cfc00;
+#global-map-image {
+    width: 100%;
+    display: block; /* Remove any potential whitespace */
 }
 
-.problem-pin.project {
-    background-color: #ff6b6b;
+#global-problem-pins {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10; /* Ensure pins are above the image */
+    pointer-events: none; /* Allows clicks through to the map image if needed, though pins aren't clickable now */
 }
+
+/* Note: .problem-pin styles above apply to global pins too. */
+/* Status background colors removed as color is now set inline via JS based on circuit */

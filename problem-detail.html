@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Problem Details</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="problem-detail-container">
+        <h1 id="problem-title">Problem <span id="problem-number"></span> (<span id="circuit-name"></span>)</h1>
+
+        <div class="problem-info">
+            <div class="info-item">
+                <strong>Status:</strong>
+                <select id="problem-status-select">
+                    <option value="unattempted">Unattempted</option>
+                    <option value="flashed">Flashed</option>
+                    <option value="sent">Sent</option>
+                    <option value="project">Project</option>
+                </select>
+            </div>
+            <div class="info-item">
+                <strong>Circuit Color:</strong>
+                <div class="color-box" id="problem-color-box"></div>
+                <span id="problem-color-label"></span>
+            </div>
+        </div>
+
+        <div class="problem-notes">
+            <h2>Notes:</h2>
+            <textarea id="problem-notes-textarea" rows="6" placeholder="Enter notes for this problem..."></textarea>
+        </div>
+
+        <div class="problem-location">
+            <h2>Location:</h2>
+            <div id="problem-map-container">
+                <img id="problem-map-image" src="map.png" alt="Climbing Area Map">
+                <div id="problem-pin-indicator">
+                    <!-- Single pin indicating this problem's location -->
+                </div>
+            </div>
+            <p id="location-coordinates">Location not set.</p>
+            <button class="btn" id="set-location-btn">Set/Update Location</button>
+            <button class="btn" id="save-details-btn">Save Changes</button>
+        </div>
+
+         <div class="navigation">
+             <button class="btn" id="back-to-problems-btn">Back to Problems List</button>
+         </div>
+
+         <!-- Hidden map view for setting location -->
+         <div id="location-setting-map-view" style="display: none;">
+             <h3>Click on the map to set the location</h3>
+             <div id="location-setting-map-container">
+               <img id="location-setting-map-image" src="map.png">
+               <!-- Maybe show existing pins for context? -->
+             </div>
+             <button id="confirm-location-btn">Confirm Location</button>
+             <button id="cancel-location-btn">Cancel</button>
+           </div>
+
+    </div>
+
+    <!-- Include necessary JS files -->
+    <script src="js/config.js"></script>
+    <script src="js/state.js"></script>
+    <!-- <script src="js/dom-elements.js"></script> Removed -->
+    <script src="js/utils.js"></script>
+    <script src="js/data-manager.js"></script>
+    <script src="js/map.js"></script> <!-- Needed for displaying/setting location -->
+    <script src="js/ui-renderer.js"></script> <!-- For color box/label -->
+    <script src="js/problem-detail-page.js"></script> <!-- Dedicated script -->
+
+</body>
+</html>

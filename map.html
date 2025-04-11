@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Problem Map</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Global Map View (shown when no circuitId in URL) -->
+    <div id="global-map-view">
+        <h1>Global Problem Map</h1>
+        <div id="global-map-container">
+          <img id="global-map-image" src="map.png" alt="Climbing Area Map">
+          <div id="global-problem-pins">
+              <!-- All problem pins will be rendered here -->
+          </div>
+        </div>
+        <div class="controls">
+            <div class="filter-group">
+                <label>
+                    <input type="checkbox" id="global-show-unattempted" checked> Unattempted
+                </label>
+                <label>
+                    <input type="checkbox" id="global-show-flashed" checked> Flashed
+                </label>
+                <label>
+                    <input type="checkbox" id="global-show-sent" checked> Sent
+                </label>
+                <label>
+                    <input type="checkbox" id="global-show-project" checked> Project
+                </label>
+            </div>
+        </div>
+        <button class="btn" id="back-to-circuits-from-global-map">Back to Circuits List</button>
+    </div>
+    
+    <!-- Circuit-specific Map View (shown when circuitId in URL) -->
+    <div id="circuit-map-view" style="display: none;">
+        <h1>Circuit Map: <span id="circuit-name-on-map">Loading...</span></h1>
+        <div id="circuit-map-container">
+          <img id="circuit-map-image" src="map.png" alt="Climbing Area Map">
+          <div id="circuit-problem-pins">
+              <!-- Circuit-specific problem pins will be rendered here -->
+          </div>
+        </div>
+        <div class="controls">
+            <div class="filter-group">
+                <label>
+                    <input type="checkbox" id="circuit-show-unattempted" checked> Unattempted
+                </label>
+                <label>
+                    <input type="checkbox" id="circuit-show-flashed" checked> Flashed
+                </label>
+                <label>
+                    <input type="checkbox" id="circuit-show-sent" checked> Sent
+                </label>
+                <label>
+                    <input type="checkbox" id="circuit-show-project" checked> Project
+                </label>
+            </div>
+        </div>
+        <div class="map-actions">
+            <button class="btn" id="back-to-problems">Back to Problems</button>
+            <button class="btn" id="done-mapping">Done Setting Location</button>
+        </div>
+    </div>
+
+    <!-- The note Modal (Potentially needed if clicking pins opens it) -->
+    <div id="noteModal" class="note-modal" style="display: none;">
+        <div class="note-modal-content">
+            <span class="note-close" id="noteClose">&times;</span>
+            <h2 id="noteModalTitle">Problem Note</h2>
+            <p>Circuit: <span id="noteModalCircuitName"></span></p>
+            <label for="noteStatusSelect">Status:</label>
+            <select id="noteStatusSelect">
+                <option value="unattempted">Unattempted</option>
+                <option value="flashed">Flashed</option>
+                <option value="sent">Sent</option>
+                <option value="project">Project</option>
+            </select>
+            <label for="noteInput">Note:</label>
+            <textarea id="noteInput" class="note-input"></textarea>
+            <!-- Set Location might not make sense here, but View Details does -->
+            <button class="btn" id="saveNote">Save Note</button>
+            <button class="btn" id="view-problem-details">View Full Details</button>
+        </div>
+    </div>
+
+    <!-- Include necessary JS files -->
+    <script src="js/config.js"></script>
+    <script src="js/state.js"></script>
+    <!-- <script src="js/dom-elements.js"></script> Removed -->
+    <script src="js/utils.js"></script>
+    <script src="js/data-manager.js"></script>
+    <script src="js/map.js"></script> <!-- Core map logic -->
+    <script src="js/note-modal.js"></script> <!-- If pins open the modal -->
+    <script src="js/ui-renderer.js"></script> <!-- May need parts for pin rendering/styling -->
+    <script src="js/map-page.js"></script> <!-- Create a dedicated script for this page -->
+
+</body>
+</html>

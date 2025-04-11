@@ -38,6 +38,16 @@
      * Problem status options
      */
     const PROBLEM_STATUSES = ['unattempted', 'flashed', 'sent', 'project'];
+    
+    /**
+     * Colors for problem status indicators
+     */
+    const STATUS_COLORS = {
+        'unattempted': '#888888', // Gray
+        'flashed': '#32CD32',     // Green
+        'sent': '#1E90FF',        // Blue
+        'project': '#DC143C'      // Red
+    };
 
     /**
      * Month names for date formatting
@@ -52,6 +62,7 @@
     window.BoulderingApp.config = {
         COLOR_OPTIONS,
         PROBLEM_STATUSES,
+        STATUS_COLORS,
         MONTHS
     };
 })();

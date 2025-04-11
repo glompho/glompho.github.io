@@ -1,95 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bouldering Problems Tracker</title>
+    <title>Circuits View</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <h1>Bouldering Problems Tracker</h1>
 
-    <div class="circuit-list" id="circuit-list" style="display: none;">
+    <div class="circuit-list" id="circuit-list">
         <h2>Your Circuits</h2>
-        <div id="circuits-container"></div>
+        <div id="circuits-container">
+            <!-- Circuits will be rendered here by JavaScript -->
+        </div>
         <button class="btn" id="new-circuit-btn">Create New Circuit</button>
+        <button class="btn" id="test-circuit-btn">Create Test Circuit</button>
+        <button class="btn" id="view-all-on-map-btn">View All on Map</button>
         <button class="btn" id="export-circuits-btn">Export Circuits</button>
         <input type="file" id="import-circuits-input" style="display: none;">
         <button class="btn" id="import-circuits-btn">Import Circuits</button>
     </div>
 
-    <div id="circuit-details" style="display: block;">
-        <h2 id="circuit-name-display"></h2>
-
-        <div class="color-key">
-            <div class="color-item" id="circuit-color-display">
-                <div class="color-box" id="circuit-color-box"></div>
-                <span id="circuit-color-label"></span>
-            </div>
-        </div>
-
-        <div class="controls">
-            <div class="filter-group">
-                <label>
-                    <input type="checkbox" id="show-unattempted" checked> Show Unattempted
-                </label>
-                <label>
-                    <input type="checkbox" id="show-flashed" checked> Show Flashed
-                </label>
-                <label>
-                    <input type="checkbox" id="show-sent" checked> Show Sent
-                </label>
-                <label>
-                    <input type="checkbox" id="show-project" checked> Show Project
-                </label>
-            </div>
-        </div>
-
-        <div class="stats" id="stats">
-            <div>Total problems: <span id="total-count">0</span></div>
-            <div>Flashed: <span id="flashed-count">0</span></div>
-            <div>Sent: <span id="sent-count">0</span></div>
-            <div>Project: <span id="project-count">0</span></div>
-            <button class="btn reset-btn" id="reset-progress">Reset Progress</button>
-            <button class="btn" id="increase-problems">Increase Problems</button>
-            <button class="btn" id="decrease-problems">Decrease Problems</button>
-            <button class="btn" id="back-to-circuits">Back to Circuits</button>
-            <button class="btn" id="toggle-view">Toggle View</button>
-        </div>
-
-        <div class="problem-grid" id="problem-grid"></div>
-
-        <div id="map-view" style="display: none;">
-            <div id="map-container">
-              <img id="map-image" src="map.png">
-              <div id="problem-pins"></div>
-            </div>
-            <button id="done-mapping">Done</button>
-          </div>
-    </div>
-    
-
-    <!-- The note Modal -->
-    <div id="noteModal" class="note-modal">
-        <div class="note-modal-content">
-            <span class="note-close" id="noteClose">&times;</span>
-            <h2 id="noteModalTitle">Problem Note</h2>
-            <label for="noteStatusSelect">Status:</label>
-            <select id="noteStatusSelect">
-                <option value="unattempted">Unattempted</option>
-                <option value="flashed">Flashed</option>
-                <option value="sent">Sent</option>
-                <option value="project">Project</option>
-            </select>
-            <label for="noteInput">Note:</label>
-            <textarea id="noteInput" class="note-input"></textarea>
-            <button class="btn" id="setLocationBtn" style="display: none;">Set Location</button>
-            <button class="btn" id="saveNote">Save Note</button>
-        </div>
-    </div>
-
      <!-- New Circuit Modal -->
-    <div id="new-circuit-modal" class="modal">
+    <div id="new-circuit-modal" class="modal" style="display: none;">
         <div class="modal-content">
             <span class="close" id="close-modal">&times;</span>
             <h2>Create New Circuit</h2>
@@ -113,14 +45,16 @@
         </div>
     </div>
 
+    <!-- Include necessary JS files -->
     <script src="js/config.js"></script>
     <script src="js/state.js"></script>
-    <script src="js/dom-elements.js"></script>
+    <!-- <script src="js/dom-elements.js"></script> Removed -->
     <script src="js/utils.js"></script>
     <script src="js/data-manager.js"></script>
-    <script src="js/map.js"></script>
-    <script src="js/note-modal.js"></script>
+    <script src="js/map.js"></script> <!-- Needed for 'View All on Map' -->
+    <script src="js/note-modal.js"></script> <!-- Not strictly needed here, but keeping for now -->
     <script src="js/ui-renderer.js"></script>
-    <script src="js/main.js"></script>
+    <script src="js/circuits-page.js"></script> <!-- Create a dedicated script for this page -->
+
 </body>
 </html>

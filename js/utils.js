@@ -15,7 +15,9 @@
      * @returns {string} A unique identifier
      */
     function generateId() {
-        return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        const id = Date.now().toString(36) + Math.random().toString(36).substr(2);
+        console.log("Generated ID:", id);
+        return id;
     }
     
     /**

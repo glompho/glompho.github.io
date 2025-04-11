@@ -15,7 +15,8 @@
         circuits: [],
         currentCircuitId: null,
         selectedProblemId: null,
-        mapViewVisible: false
+        mapViewVisible: false,
+        globalMapViewVisible: false // Add state for global map view
     };
 
     /**
@@ -26,6 +27,15 @@
         return state.circuits.find(c => c.id === state.currentCircuitId);
     }
 
+    /**
+     * Get a circuit by ID
+     * @param {string} circuitId - The ID of the circuit to get
+     * @returns {object|null} The circuit object or null if not found
+     */
+    function getCircuitById(circuitId) {
+        return state.circuits.find(c => c.id === circuitId) || null;
+    }
+
     // Expose state management to other modules
     window.BoulderingApp = window.BoulderingApp || {};
     window.BoulderingApp.state = {
@@ -34,6 +44,7 @@
             state = { ...state, ...newState };
         },
         getCurrentCircuit,
+        getCircuitById,
         setCurrentCircuitId: (id) => {
             state.currentCircuitId = id;
         },
@@ -42,6 +53,9 @@
         },
         setMapViewVisible: (visible) => {
             state.mapViewVisible = visible;
+        },
+        setGlobalMapViewVisible: (visible) => { // Add setter for global map view
+            state.globalMapViewVisible = visible;
         },
         setCircuits: (circuits) => {
             state.circuits = circuits;

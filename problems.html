@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circuit Problems</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="circuit-details">
+        <h2 id="circuit-name-display">Circuit Name Loading...</h2>
+
+        <div class="color-key">
+            <div class="color-item" id="circuit-color-display">
+                <div class="color-box" id="circuit-color-box"></div>
+                <span id="circuit-color-label"></span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="filter-group">
+                <label>
+                    <input type="checkbox" id="show-unattempted" checked> Show Unattempted
+                </label>
+                <label>
+                    <input type="checkbox" id="show-flashed" checked> Show Flashed
+                </label>
+                <label>
+                    <input type="checkbox" id="show-sent" checked> Show Sent
+                </label>
+                <label>
+                    <input type="checkbox" id="show-project" checked> Show Project
+                </label>
+            </div>
+        </div>
+
+        <div class="stats" id="stats">
+            <div>Total problems: <span id="total-count">0</span></div>
+            <div>Flashed: <span id="flashed-count">0</span></div>
+            <div>Sent: <span id="sent-count">0</span></div>
+            <div>Project: <span id="project-count">0</span></div>
+            <button class="btn reset-btn" id="reset-progress">Reset Progress</button>
+            <button class="btn" id="increase-problems">Increase Problems</button>
+            <button class="btn" id="decrease-problems">Decrease Problems</button>
+            <button class="btn" id="back-to-circuits">Back to Circuits List</button>
+            <button class="btn" id="toggle-view">View on Map</button> <!-- Now navigates to map.html -->
+        </div>
+
+        <div class="problem-grid" id="problem-grid">
+            <!-- Problems will be rendered here -->
+        </div>
+
+        <!-- Map View has been moved to map.html -->
+    </div>
+
+    <!-- The note Modal (Needed for editing problem status/notes) -->
+    <div id="noteModal" class="note-modal" style="display: none;">
+        <div class="note-modal-content">
+            <span class="note-close" id="noteClose">&times;</span>
+            <h2 id="noteModalTitle">Problem Note</h2>
+            <label for="noteStatusSelect">Status:</label>
+            <select id="noteStatusSelect">
+                <option value="unattempted">Unattempted</option>
+                <option value="flashed">Flashed</option>
+                <option value="sent">Sent</option>
+                <option value="project">Project</option>
+            </select>
+            <label for="noteInput">Note:</label>
+            <textarea id="noteInput" class="note-input"></textarea>
+            <button class="btn" id="setLocationBtn">Set Location</button> <!-- Button to toggle map view for placement -->
+            <button class="btn" id="saveNote">Save Note</button>
+            <button class="btn" id="view-problem-details">View Full Details</button> <!-- Link to problem-detail.html -->
+        </div>
+    </div>
+
+    <!-- Include necessary JS files -->
+    <script src="js/config.js"></script>
+    <script src="js/state.js"></script>
+    <!-- <script src="js/dom-elements.js"></script> Removed -->
+    <script src="js/utils.js"></script>
+    <script src="js/data-manager.js"></script>
+    <script src="js/map.js"></script> <!-- Needed for map view toggle and pin placement -->
+    <script src="js/note-modal.js"></script> <!-- Needed for note editing -->
+    <script src="js/ui-renderer.js"></script>
+    <script src="js/problems-page.js"></script> <!-- Create a dedicated script for this page -->
+
+</body>
+</html>

@@ -149,52 +149,71 @@
         
         // Back to circuits list
         elements.backToCircuitsBtn.addEventListener('click', () => {
-            elements.circuitDetailsSection.style.display = 'none';
-            elements.circuitListSection.style.display = 'block';
+            window.location.href = 'index.html'; // Navigate to circuits page
         });
-        
+
         // Import/Export
         elements.exportCircuits.addEventListener('click', exportCircuits);
-        
+
         elements.importCircuits.addEventListener('click', () => {
             // Remove any existing event listeners to prevent duplicates
             const newInput = elements.importCircuitsInput.cloneNode(true);
             elements.importCircuitsInput.parentNode.replaceChild(newInput, elements.importCircuitsInput);
             elements.importCircuitsInput = newInput;
-            
+
             elements.importCircuitsInput.addEventListener('change', importCircuits);
             elements.importCircuitsInput.click();
         });
-        
-        // Filter checkboxes
+
+        // Filter checkboxes - these will likely need to be moved to problems.html and map.html
+        /*
         elements.showUnattempted.addEventListener('change', uiRenderer.renderProblems);
         elements.showFlashed.addEventListener('change', uiRenderer.renderProblems);
         elements.showSent.addEventListener('change', uiRenderer.renderProblems);
         elements.showProject.addEventListener('change', uiRenderer.renderProblems);
+        */
+
+        // Global Map View buttons - these will need to be moved to map.html
+        /*
+        elements.viewAllOnMapBtn.addEventListener('click', map.toggleGlobalMapView);
+        elements.backToCircuitsFromGlobalMapBtn.addEventListener('click', map.toggleGlobalMapView);
+        */
+
+        // GLOBAL MAP FILTER CHECKBOXES - these will need to be moved to map.html
+        /*
+        document.getElementById('global-show-unattempted').addEventListener('change', map.renderGlobalMap);
+        document.getElementById('global-show-flashed').addEventListener('change', map.renderGlobalMap);
+        document.getElementById('global-show-sent').addEventListener('change', map.renderGlobalMap);
+        document.getElementById('global-show-project').addEventListener('change', map.renderGlobalMap);
+        */
     }
-    
+
     // Initialize the app
     function init() {
-        // Populate the color dropdown
+        // Populate the color dropdown - might need to move this to circuits.html or problems.html if needed there
         uiRenderer.populateColorDropdown();
-        
+
         // Set up event listeners
         initEventListeners();
-        
-        // Load circuits from localStorage
-        const circuitFound = dataManager.loadCircuits();
-        
-        if (circuitFound) {
-            uiRenderer.loadCircuitDetails();
-        } else {
-            elements.circuitDetailsSection.style.display = 'none';
-            elements.circuitListSection.style.display = 'block';
-        }
-        
-        uiRenderer.renderCircuitsList();
+
+        // Load circuits from localStorage - this should happen on index.html (circuits page)
+        // const circuitFound = dataManager.loadCircuits();
+
+        // if (circuitFound) {
+        //     uiRenderer.loadCircuitDetails();
+        // } else {
+        //     elements.circuitDetailsSection.style.display = 'none';
+        //     elements.circuitListSection.style.display = 'block';
+        // }
+
+        // Ensure global map is hidden initially - not relevant anymore
+        // elements.globalMapView.style.display = 'none';
+
+        // Render circuits list - this should happen on index.html (circuits page)
+        // uiRenderer.renderCircuitsList();
     }
-    
+
     // Run initialization when DOM is loaded
     document.addEventListener('DOMContentLoaded', init);
-    
+
 })();
